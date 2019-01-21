@@ -29,6 +29,7 @@
 #This script has been tested with KiCAD version BZR 5382 with all scripting settings turned on. (Ubuntu and Python 2.7.6)
 #The script can be run in Linux terminal with command $python pcbnew_cloner.py
 
+import argparse
 import sys
 import re
 from pcbnew import *
@@ -39,21 +40,39 @@ from pcbnew import *
 #You can copy the schema parsing with kipy for example from klonor-kicad if you have enough components to justify it
 #schemaTemplate = './boosterilevy/booster.sch'
 #Instead the components to be cloned are currently given manually
-templateReferences = ['D201', 'D202', 'D203', 'Q201', 'Q202', 'P201', 'R201', 'R202', 'R203', 'R204', 'C201']
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-d', default=100, type=int, help='Difference in the reference numbers between hierarchical sheet (default: %(default)s)')
+parser.add_argument('-s', default=200, type=int, help='Starting point of numbering in the first hierarchical sheet (default: %(default)s)')
+parser.add_argument('-x', default=11, type=float, help='Spacing between clones in x direction (default: %(default)s)')
+parser.add_argument('-y', default=11, type=float, help='Spacing between clones in y direction (default: %(default)s)')
+parser.add_argument('-X', default=4, type=int, help='Number of clones in x direction (default: %(default)s)')
+parser.add_argument('-Y', default=4, type=int, help='Number of clones in y direction(default: %(default)s)')
+
+parser.add_argument('input')
+parser.add_argument('references')
+parser.add_argument('output', nargs='?', default=None)
+args = parser.parse_args()
+
+with open(args.references, 'r') as f:
+	templateReferences = f.read().split()
 
 #The .kicad-pcb board with a ready layout for the area to be cloned.
 #The cloned area must be surrounded by a (square) zone in the comment layer.
-inputBoard = './boosterilevy/16x_boosteri.kicad_pcb'
-#Output file, original file remains unmodified
-outputBoardFile = './boosterilevy/skriptioutput.kicad_pcb'
+inputBoard = args.input
 
-templateRefModulo = 100;	#Difference in the reference numbers between hierarchical sheet
-templateRefStart = 200;		#Starting point of numbering in the first hierarchical sheet
-move_dx = FromMM(11)		#Spacing between clones in x direction
-move_dy = FromMM(11)		#Spacing between clones in y direction
-clonesX = 4			#Number of clones in x direction
-clonesY = 4			#Number of clones in y direction
+if args.output:
+    outputBoardFile = args.output
+else:
+    outputBoardFile = args.input
 
+templateRefModulo = args.d
+templateRefStart = args.s
+move_dx = FromMM(args.x)
+move_dy = FromMM(args.y)
+clonesX = args.X
+clonesY = args.Y
 
 numberOfClones = clonesX * clonesY
 board = LoadBoard(inputBoard)
