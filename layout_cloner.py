@@ -6,7 +6,7 @@
 #For now, there are no command line parameters given for the script, instead
 #all the settings are written in this file. Before using this script, you must have your schema
 #ready.
-#1. Use hierarchical sheets for the subschemas to be cloned and annotate them 
+#1. Use hierarchical sheets for the subschemas to be cloned and annotate them
 #so that each sheet has module references starting with a different hundred.
 #2. Import a netlist into Pcbnew and place all the components except the ones to be cloned.
 #3. In the same board file, create also an optimal layout for the subschema to be used
@@ -29,11 +29,9 @@
 #This script has been tested with KiCAD version BZR 5382 with all scripting settings turned on. (Ubuntu and Python 2.7.6)
 #The script can be run in Linux terminal with command $python pcbnew_cloner.py
 
-
-import sys			
-import re			#regexp
+import sys
+import re
 from pcbnew import *
-
 
 #Settings, modify these to suit your project
 
@@ -67,14 +65,14 @@ for templateRef in templateReferences:							#For each module in the template sc
         cloneReferences = []
         templateReferenceNumber = (re.findall(r"\d+", templateRef)).pop(0)		#Extract reference number (as string)
 
-        for i in range(0, numberOfClones-1):						#Create list of references to be cloned of this module in the template	
+        for i in range(0, numberOfClones-1):						#Create list of references to be cloned of this module in the template
             cloneRefNumber = int(templateReferenceNumber) + (i+1)*templateRefModulo	#Number of the next clone
-            cloneReferences.append(re.sub(templateReferenceNumber, "", templateRef) + str(cloneRefNumber))	#String reference of the next clone			
+            cloneReferences.append(re.sub(templateReferenceNumber, "", templateRef) + str(cloneRefNumber))	#String reference of the next clone
         print 'Original reference: ', templateRef, ', Generated clone references', cloneReferences
 
         for counter, cloneRef in enumerate(cloneReferences):				#Move each of the clones to appropriate location
             templatePosition = templateModule.GetPosition()
-            cloneModule = board.FindModuleByReference(cloneRef)				
+            cloneModule = board.FindModuleByReference(cloneRef)
             if cloneModule is not None:
                 if cloneModule.GetLayer() is not templateModule.GetLayer():			#If the cloned module is not on the same layer as the template
                     cloneModule.Flip(wxPoint(1,1))						#Flip it around any point to change the layer
@@ -90,7 +88,7 @@ print 'Modules moved and oriented according to template.'
 #Cloning zones inside the template area.
 #First lets use the comment zone to define the area to be cloned.
 for i in range(0, board.GetAreaCount()):
-    zone = board.GetArea(i)				
+    zone = board.GetArea(i)
     if zone.GetLayer() == 41:								#Find the comment zone encasing the template board area
         templateRect = zone.GetBoundingBox()
         #board.RemoveArea(zone)								#Removing comment zone does not work
@@ -102,7 +100,7 @@ print 'Iterating through all the pads for each cloned zone, might take a few sec
 for i in range(0, board.GetAreaCount()):						#For all the zones in the template board
     zone = board.GetArea(i)
     #print 'Original zone location', zone.GetPosition()
-            
+
     if templateRect.Contains(zone.GetPosition()) and zone.GetLayer() is not 41:		#If the zone is inside the area to be cloned (the comment zone) and it is not the comment zone (layer 41)
         for i in range(1, numberOfClones):						#For each target clone areas
             zoneClone = zone.Duplicate()						#Make copy of the zone to be cloned
