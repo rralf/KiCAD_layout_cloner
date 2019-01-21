@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 #Script for KiCAD Pcbnew to clone a part of a layout. The scipt clones a row or a matrce
 #of similar layouts.
