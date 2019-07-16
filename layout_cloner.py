@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 #Script for KiCAD Pcbnew to clone a part of a layout. The scipt clones a row or a matrce
 #of similar layouts.
@@ -87,7 +87,7 @@ for templateRef in templateReferences:							#For each module in the template sc
         for i in range(0, numberOfClones-1):						#Create list of references to be cloned of this module in the template
             cloneRefNumber = int(templateReferenceNumber) + (i+1)*templateRefModulo	#Number of the next clone
             cloneReferences.append(re.sub(templateReferenceNumber, "", templateRef) + str(cloneRefNumber))	#String reference of the next clone
-        print 'Original reference: ', templateRef, ', Generated clone references', cloneReferences
+        print('Original reference: %s, Generated clone references: %s' % (templateRef, cloneReferences))
 
         for counter, cloneRef in enumerate(cloneReferences):				#Move each of the clones to appropriate location
             templatePosition = templateModule.GetPosition()
@@ -99,26 +99,31 @@ for templateRef in templateReferences:							#For each module in the template sc
                 cloneModule.SetPosition(vect)						#Set position
                 cloneModule.SetOrientation(templateModule.GetOrientation())			#And copy orientation from template
             else:
-                print 'Module to be moved (', cloneRef, ') is not found in the board.'
+                print('Module to be moved (%s) is not found in the board.' % cloneRef);
     else:
-        print 'Module ', templateRef, ' was not found in the template board'
-print 'Modules moved and oriented according to template.'
+        print('Module %s was not found in the template board' % templateRef)
+print('Modules moved and oriented according to template.')
 
 #Cloning zones inside the template area.
 #First lets use the comment zone to define the area to be cloned.
+templateRect = None
 for i in range(0, board.GetAreaCount()):
     zone = board.GetArea(i)
     if zone.GetLayer() == 41:								#Find the comment zone encasing the template board area
         templateRect = zone.GetBoundingBox()
         #board.RemoveArea(zone)								#Removing comment zone does not work
-	print 'Comment zone left top: ', templateRect.GetOrigin(), ' width: ', templateRect.GetWidth(), ' height: ', templateRect.GetHeight()
+        print('Comment zone left top: %s width: %u height: %u' % (templateRect.GetOrigin(), templateRect.GetWidth(), templateRect.GetHeight()))
+
+if not templateRect:
+    print('Template Rect not found!')
+    quit()
 
 modules = board.GetModules()
 #Then iterate through all the other zones and copy them
-print 'Iterating through all the pads for each cloned zone, might take a few seconds...'
+print('Iterating through all the pads for each cloned zone, might take a few seconds...')
 for i in range(0, board.GetAreaCount()):						#For all the zones in the template board
     zone = board.GetArea(i)
-    #print 'Original zone location', zone.GetPosition()
+    print('Original zone location %s' % zone.GetPosition())
 
     if templateRect.Contains(zone.GetPosition()) and zone.GetLayer() is not 41:		#If the zone is inside the area to be cloned (the comment zone) and it is not the comment zone (layer 41)
         for i in range(1, numberOfClones):						#For each target clone areas
@@ -129,7 +134,7 @@ for i in range(0, board.GetAreaCount()):						#For all the zones in the template
                     if zoneClone.HitTestInsideZone(pad.GetPosition()) and pad.IsOnLayer(zoneClone.GetLayer()):		#To find the (last) one inside the cloned zone. pad.GetZoneConnection() could also be used
                         zoneClone.SetNetCode(pad.GetNet().GetNet())			#And set the (maybe) correct net for the zone
             board.Add(zoneClone)								#Add to the zone board
-print 'Zones cloned.'
+print('Zones cloned.')
 
 #Cloning tracks inside the template area
 tracks = board.GetTracks()
@@ -142,8 +147,8 @@ for track in tracks:
             cloneTracks.append(cloneTrack)						#Add to temporary list
 for track in cloneTracks:								#Append the temporary list to board
     tracks.Append(track)
-print 'Tracks cloned.'
+print('Tracks cloned.')
 
 #Save output file
 board.Save(outputBoardFile)
-print 'Script completed & output file saved.'
+print('Script completed & output file saved.')
